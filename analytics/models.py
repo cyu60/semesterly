@@ -114,3 +114,7 @@ class FacebookAlertClick(models.Model):
     student = models.ForeignKey(Student, null=True, default=None)
     time_created = models.DateTimeField(auto_now_add=True)
     school = models.CharField(max_length=50)
+
+class DailyActiveLogins(models.Model):
+    date = models.DateTimeField(null=False)
+    number_daily_logins = models.IntegerField(null=False, default=0)

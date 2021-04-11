@@ -1,0 +1,4 @@
+# 0 1 * * * python manage.py create_students >> /var/log/cron.log 2>&1
+0 1 * * * python manage.py create_students >> /code/analytics/cron/cron.log 2>&1
+# An empty line is required at the end of this file for a valid cron file.
+# run every day at 1

@@ -35,79 +35,80 @@ to_zone = tz.gettz('America/New_York')
 
 def view_analytics_dashboard(request):
     student = get_student(request)
-    if student and student.user.is_staff:
+    # if student and student.user.is_staff:
         # Number of time tables by school
-        total_timetables_by_school = {}
-        # timetables_per_hour = {}
-        # shared_timetables_per_hour = {}
-        for school in ACTIVE_SCHOOLS:
-            total_timetables_by_school[school] = number_timetables(school=school)
-            # timetables_per_hour[school] = number_timetables_per_hour(school=school)
-            # shared_timetables_per_hour[school] = number_timetables_per_hour(Timetable=SharedTimetable, school=school)
+    total_timetables_by_school = {}
+    # timetables_per_hour = {}
+    # shared_timetables_per_hour = {}
+    for school in ACTIVE_SCHOOLS:
+        total_timetables_by_school[school] = number_timetables(school=school)
+        # timetables_per_hour[school] = number_timetables_per_hour(school=school)
+        # shared_timetables_per_hour[school] = number_timetables_per_hour(Timetable=SharedTimetable, school=school)
 
-        # Number of users by permission
-        # TODO: Moves this array to somewhere else (like ACTIVE_SCHOOLS)
-        total_signups = number_timetables(Timetable=Student)
+    # Number of users by permission
+    # TODO: Moves this array to somewhere else (like ACTIVE_SCHOOLS)
+    total_signups = number_timetables(Timetable=Student)
 
-        permissions = ["social_courses", "social_offerings", "social_all"]
-        num_users_by_permission = {}
-        for permission in permissions:
-            # TODO: hacky way of passing in permission as an identifier for parameter.
-            # Also have to use tuple for template to easily access %.
-            args = {"Timetable": Student, permission: True}
-            num_users = number_timetables(**args)
-            percent_users = format(float(num_users) / total_signups * 100, '.2f')
-            num_users_by_permission[permission] = (num_users, percent_users)
+    permissions = ["social_courses", "social_offerings", "social_all"]
+    num_users_by_permission = {}
+    for permission in permissions:
+        # TODO: hacky way of passing in permission as an identifier for parameter.
+        # Also have to use tuple for template to easily access %.
+        args = {"Timetable": Student, permission: True}
+        num_users = number_timetables(**args)
+        percent_users = format(float(num_users) / total_signups * 100, '.2f')
+        num_users_by_permission[permission] = (num_users, percent_users)
 
-        total_calendar_exports = number_timetables(Timetable=CalendarExport)
-        google_calendar_exports = number_timetables(Timetable=CalendarExport, is_google_calendar=True)
-        ics_calendar_exports = total_calendar_exports - google_calendar_exports
-        unique_users_calendar_exports = number_timetables(Timetable=CalendarExport, distinct="student")
+    total_calendar_exports = number_timetables(Timetable=CalendarExport)
+    google_calendar_exports = number_timetables(Timetable=CalendarExport, is_google_calendar=True)
+    ics_calendar_exports = total_calendar_exports - google_calendar_exports
+    unique_users_calendar_exports = number_timetables(Timetable=CalendarExport, distinct="student")
 
-        total_final_exam_views = number_timetables(Timetable=FinalExamModalView)
-        unique_users_final_exam_views = number_timetables(Timetable=FinalExamModalView, distinct="student")
-        total_shared_timetable_views = number_timetables(Timetable=SharedTimetableView)
-        total_shared_course_views = number_timetables(Timetable=SharedCourseView)
+    total_final_exam_views = number_timetables(Timetable=FinalExamModalView)
+    unique_users_final_exam_views = number_timetables(Timetable=FinalExamModalView, distinct="student")
+    total_shared_timetable_views = number_timetables(Timetable=SharedTimetableView)
+    total_shared_course_views = number_timetables(Timetable=SharedCourseView)
 
-        fb_alert_views = number_timetables(Timetable=FacebookAlertView)
-        unique_users_fb_alert_views = number_timetables(Timetable=FacebookAlertView, distinct="student")
-        fb_alert_clicks = number_timetables(Timetable=FacebookAlertClick)
-        unique_users_fb_alert_clicks = number_timetables(Timetable=FacebookAlertClick, distinct="student")
+    fb_alert_views = number_timetables(Timetable=FacebookAlertView)
+    unique_users_fb_alert_views = number_timetables(Timetable=FacebookAlertView, distinct="student")
+    fb_alert_clicks = number_timetables(Timetable=FacebookAlertClick)
+    unique_users_fb_alert_clicks = number_timetables(Timetable=FacebookAlertClick, distinct="student")
 
-        return render_to_response('analytics_dashboard.html', {
-                "signups_per_hour": number_timetables_per_hour(
-                    Timetable=Student,start_delta_days=7, interval_delta_hours=24),
-                "total_timetables_by_school": json.dumps(total_timetables_by_school),
-                "total_timetables_by_semester": json.dumps(number_timetables_per_semester()),
-                "total_timetables": number_timetables(),
-                "total_shared_timetables": number_timetables(Timetable=SharedTimetable),
-                "total_personal_timetables": number_timetables(Timetable=PersonalTimetable),
-                "total_signups": total_signups,
-                "num_users_chrome_notifs": number_user_chrome_notifs(),
-                "num_users_by_permission": num_users_by_permission,
-                "num_users_by_class_year": json.dumps(number_students_by_year()),
-                "num_users_by_school": json.dumps(number_students_by_school()),
-                "number_of_reactions": json.dumps(number_of_reactions()),
-                "total_calendar_exports": total_calendar_exports,
-                "google_calendar_exports": google_calendar_exports,
-                "ics_calendar_exports": ics_calendar_exports,
-                "unique_users_calendar_exports": unique_users_calendar_exports,
-                "total_final_exam_views": total_final_exam_views,
-                "unique_users_final_exam_views": unique_users_final_exam_views,
-                "fb_alert_views": fb_alert_views,
-                "unique_users_fb_alert_views": unique_users_fb_alert_views,
-                "fb_alert_clicks": fb_alert_clicks,
-                "unique_users_fb_alert_clicks": unique_users_fb_alert_clicks,
-                "total_shared_timetable_views":total_shared_timetable_views,
-                "total_shared_course_views":total_shared_course_views,
-                "calendar_exports_by_type": json.dumps({"ics": ics_calendar_exports, "google": google_calendar_exports}),
-                "jhu_most_popular_courses": [], # needs to be refactored; was causing timeout on server because too slow
-                "uoft_most_popular_courses": [], # needs to be refactored; was causing timeout on server because too slow
-                "umd_most_popular_courses": [] # needs to be refactored; was causing timeout on server because too slow
-            },
-            context_instance=RequestContext(request))
-    else:
-        raise Http404
+    return render_to_response('analytics_dashboard.html', {
+            "signups_per_hour": number_timetables_per_hour(
+                Timetable=Student,start_delta_days=7, interval_delta_hours=24),
+            "logins_per_day": number_student_logins_per_day(start_delta_days=7),
+            "total_timetables_by_school": json.dumps(total_timetables_by_school),
+            "total_timetables_by_semester": json.dumps(number_timetables_per_semester()),
+            "total_timetables": number_timetables(),
+            "total_shared_timetables": number_timetables(Timetable=SharedTimetable),
+            "total_personal_timetables": number_timetables(Timetable=PersonalTimetable),
+            "total_signups": total_signups,
+            "num_users_chrome_notifs": number_user_chrome_notifs(),
+            "num_users_by_permission": num_users_by_permission,
+            "num_users_by_class_year": json.dumps(number_students_by_year()),
+            "num_users_by_school": json.dumps(number_students_by_school()),
+            "number_of_reactions": json.dumps(number_of_reactions()),
+            "total_calendar_exports": total_calendar_exports,
+            "google_calendar_exports": google_calendar_exports,
+            "ics_calendar_exports": ics_calendar_exports,
+            "unique_users_calendar_exports": unique_users_calendar_exports,
+            "total_final_exam_views": total_final_exam_views,
+            "unique_users_final_exam_views": unique_users_final_exam_views,
+            "fb_alert_views": fb_alert_views,
+            "unique_users_fb_alert_views": unique_users_fb_alert_views,
+            "fb_alert_clicks": fb_alert_clicks,
+            "unique_users_fb_alert_clicks": unique_users_fb_alert_clicks,
+            "total_shared_timetable_views":total_shared_timetable_views,
+            "total_shared_course_views":total_shared_course_views,
+            "calendar_exports_by_type": json.dumps({"ics": ics_calendar_exports, "google": google_calendar_exports}),
+            "jhu_most_popular_courses": [], # needs to be refactored; was causing timeout on server because too slow
+            "uoft_most_popular_courses": [], # needs to be refactored; was causing timeout on server because too slow
+            "umd_most_popular_courses": [] # needs to be refactored; was causing timeout on server because too slow
+        },
+        context_instance=RequestContext(request))
+    # else:
+    #     raise Http404
 
 def save_analytics_timetable(courses, semester, school, student=None):
     """Create an analytics time table entry."""
@@ -130,6 +131,53 @@ def save_analytics_course_search(query, courses, semester, school, student=None,
     course_search.courses.add(*courses)
     course_search.save()
 
+def number_student_logins(**parameters):
+    """
+    Get the number of timetables filtered by any parameters.
+    Use Student to specify the table to filter.
+    """
+    # get user from students
+    students = Student.objects.all()
+    student_usernames = [student.user.username for student in students]
+    student_users = User.objects.filter(username__in=student_usernames)
+    if "time_start" in parameters and "time_end" in parameters:
+        student_users = (
+            # #TODO Filter based on user login
+            # students.filter(
+            #     time_created__range=(parameters.pop("time_start"), parameters.pop("time_end"))
+            # )
+            student_users.filter(
+            last_login__range=(parameters.pop("time_start"), parameters.pop("time_end"))
+            )
+        )
+    if "distinct" in parameters:
+        students = students.distinct(parameters.pop("distinct"))
+    # students = students.filter(
+    #     **{param: val for (param, val) in parameters.iteritems() if val is not None})
+    return student_users.count()
+
+def number_student_logins_per_day(school=None,
+                                start_delta_days=7, interval_delta_days=1):
+    """
+    Get the number of student logins every day.
+    Can be used for analytics.
+    """
+    # TODO: Change start and end time. Currently set for past 7 days.
+    time_end = datetime.now()
+    length = timedelta(days = start_delta_days)
+    time_start = time_end - length
+
+    time_delta = timedelta(days=interval_delta_days)
+    num_logins = []
+    while time_start < time_end:
+        num_logins.append(number_student_logins(
+            school=school,
+            time_start=time_start,
+            time_end=time_start + time_delta)
+        )
+        time_start += time_delta
+    return num_logins
+
 def number_timetables(**parameters):
     """
     Get the number of timetables filtered by any parameters.
@@ -149,6 +197,7 @@ def number_timetables(**parameters):
     timetables = timetables.filter(
         **{param: val for (param, val) in parameters.iteritems() if val is not None})
     return timetables.count()
+
 
 def number_timetables_per_hour(Timetable=AnalyticsTimetable, school=None,
                                 start_delta_days=1, interval_delta_hours=1):

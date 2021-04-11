@@ -30,3 +30,24 @@ RUN pip install psycopg2-binary
 RUN npm install
 RUN npm run build
 
+# set up cron job -- https://stackoverflow.com/questions/37458287/how-to-run-a-cron-job-inside-a-docker-container
+RUN apt-get update && apt-get -y install cron
+
+# Copy analytics-cron file to the cron directory
+COPY /analytics/cron/analytics-cron /etc/cron.d/analytics-cron
+
+# Give execution rights on the cron job
+#RUN chmod 0644 /code/code/analytics/cron/analytics-cron
+RUN chmod 0644 /etc/cron.d/analytics-cron
+
+# Apply cron job
+#RUN crontab /analytics/cron/analytics-cron
+RUN crontab /etc/cron.d/analytics-cron
+
+# Create the log file to be able to run tail
+RUN touch /code/analytics/cron/cron.log
+#RUN touch /var/log/cron.log
+
+# Run the command on container startup
+CMD cron && tail -f /code/analytics/cron/cron.log
+#CMD cron && tail -f /var/log/cron.log
